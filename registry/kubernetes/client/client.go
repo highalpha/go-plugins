@@ -43,6 +43,16 @@ func (c *client) WatchPods(labels map[string]string) (watch.Watch, error) {
 	return api.NewRequest(c.opts).Get().Resource("pods").Params(&api.Params{LabelSelector: labels}).Watch()
 }
 
+// Get the current namespace
+func (c *client) GetNamespace() string {
+	return c.opts.Namespace
+}
+
+// Set the namespace
+func (c *client) SetNamespace(ns string) {
+	c.opts.Namespace = ns
+}
+
 func detectNamespace() (string, error) {
 	nsPath := path.Join(serviceAccountPath, "namespace")
 

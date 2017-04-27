@@ -135,6 +135,14 @@ func (c *kregistry) Deregister(s *registry.Service) error {
 // GetService will get all the pods with the given service selector,
 // and build services from the annotations.
 func (c *kregistry) GetService(name string) ([]*registry.Service, error) {
+	parts := strings.Split(name, ":")
+	if len(parts) > 1 {
+		tempNS := c.client.GetNamespace()
+		defer c.client.SetNamespace(tempNS)
+		c.client.SetNamespace(parts[0])
+		sls, _ := c.ListServices()
+		name = strings.Join(parts[1:], "")
+	}
 	pods, err := c.client.ListPods(map[string]string{
 		svcSelectorPrefix + serviceName(name): svcSelectorValue,
 	})

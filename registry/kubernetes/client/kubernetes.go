@@ -7,6 +7,8 @@ type Kubernetes interface {
 	ListPods(labels map[string]string) (*PodList, error)
 	UpdatePod(podName string, pod *Pod) (*Pod, error)
 	WatchPods(labels map[string]string) (watch.Watch, error)
+	GetNamespace() string
+	SetNamespace(ns string)
 }
 
 // PodList ...
