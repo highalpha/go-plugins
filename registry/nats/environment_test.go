@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/micro/go-micro/registry"
-	"github.com/micro/go-plugins/registry/nats"
+	"github.com/highalpha/go-plugins/registry/nats"
 )
 
 type environment struct {

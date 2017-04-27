@@ -1,4 +1,4 @@
-# Go Plugins [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![GoDoc](https://godoc.org/github.com/micro/go-plugins?status.svg)](https://godoc.org/github.com/micro/go-plugins) [![Travis CI](https://travis-ci.org/micro/go-plugins.svg?branch=master)](https://travis-ci.org/micro/go-plugins) [![Go Report Card](https://goreportcard.com/badge/micro/go-plugins)](https://goreportcard.com/report/github.com/micro/go-plugins)
+# Go Plugins [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![GoDoc](https://godoc.org/github.com/highalpha/go-plugins?status.svg)](https://godoc.org/github.com/highalpha/go-plugins) [![Travis CI](https://travis-ci.org/micro/go-plugins.svg?branch=master)](https://travis-ci.org/micro/go-plugins) [![Go Report Card](https://goreportcard.com/badge/micro/go-plugins)](https://goreportcard.com/report/github.com/highalpha/go-plugins)
 
 A repository for go-micro plugins.
 
@@ -30,8 +30,8 @@ Wrappers	|	Client/Server middleware; Circuit Breakers, Rate Limit
 
 Feature		|	Description		|	Author
 ----------	|	------------		|	--------
-[Registry/Kubernetes](https://godoc.org/github.com/micro/go-plugins/registry/kubernetes)	|	Service discovery via the Kubernetes API	|	[@nickjackson](https://github.com/nickjackson)
-[Registry/Zookeeper](https://godoc.org/github.com/micro/go-plugins/registry/zookeeper)	|	Service discovery using Zookeeper	|	[@HeavyHorst](https://github.com/HeavyHorst)
+[Registry/Kubernetes](https://godoc.org/github.com/highalpha/go-plugins/registry/kubernetes)	|	Service discovery via the Kubernetes API	|	[@nickjackson](https://github.com/nickjackson)
+[Registry/Zookeeper](https://godoc.org/github.com/highalpha/go-plugins/registry/zookeeper)	|	Service discovery using Zookeeper	|	[@HeavyHorst](https://github.com/HeavyHorst)
 
 ## Usage
 
@@ -42,9 +42,9 @@ Plugins can be added to go-micro in the following ways. By doing so they'll be a
 ```go
 import (
 	"github.com/micro/go-micro/cmd"
-	_ "github.com/micro/go-plugins/broker/rabbitmq"
-	_ "github.com/micro/go-plugins/registry/kubernetes"
-	_ "github.com/micro/go-plugins/transport/nats"
+	_ "github.com/highalpha/go-plugins/broker/rabbitmq"
+	_ "github.com/highalpha/go-plugins/registry/kubernetes"
+	_ "github.com/highalpha/go-plugins/transport/nats"
 )
 
 func main() {
@@ -58,9 +58,9 @@ The same is achieved when calling ```service.Init```
 ```go
 import (
 	"github.com/micro/go-micro"
-	_ "github.com/micro/go-plugins/broker/rabbitmq"
-	_ "github.com/micro/go-plugins/registry/kubernetes"
-	_ "github.com/micro/go-plugins/transport/nats"
+	_ "github.com/highalpha/go-plugins/broker/rabbitmq"
+	_ "github.com/highalpha/go-plugins/registry/kubernetes"
+	_ "github.com/highalpha/go-plugins/transport/nats"
 )
 
 func main() {
@@ -89,7 +89,7 @@ CLI Flags provide a simple way to initialise plugins but you can do the same you
 ```go
 import (
 	"github.com/micro/go-micro"
-	"github.com/micro/go-plugins/registry/kubernetes"
+	"github.com/highalpha/go-plugins/registry/kubernetes"
 )
 
 func main() {
@@ -114,9 +114,9 @@ Create file plugins.go
 package main
 
 import (
-	_ "github.com/micro/go-plugins/broker/rabbitmq"
-	_ "github.com/micro/go-plugins/registry/kubernetes"
-	_ "github.com/micro/go-plugins/transport/nats"
+	_ "github.com/highalpha/go-plugins/broker/rabbitmq"
+	_ "github.com/highalpha/go-plugins/registry/kubernetes"
+	_ "github.com/highalpha/go-plugins/transport/nats"
 )
 ```
 

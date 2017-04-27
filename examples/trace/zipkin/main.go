@@ -7,7 +7,7 @@ import (
 	"github.com/micro/go-micro/cmd"
 	"github.com/micro/go-micro/metadata"
 	"github.com/micro/go-os/trace"
-	"github.com/micro/go-plugins/trace/zipkin"
+	"github.com/highalpha/go-plugins/trace/zipkin"
 	"golang.org/x/net/context"
 	"time"
 )

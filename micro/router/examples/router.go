@@ -7,7 +7,7 @@ import (
 
 	"github.com/micro/go-os/config"
 	"github.com/micro/go-os/config/source/file"
-	"github.com/micro/go-plugins/micro/router"
+	"github.com/highalpha/go-plugins/micro/router"
 )
 
 func main() {

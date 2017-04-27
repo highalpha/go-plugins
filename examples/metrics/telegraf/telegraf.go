@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/micro/go-os/metrics"
-	"github.com/micro/go-plugins/metrics/telegraf"
+	"github.com/highalpha/go-plugins/metrics/telegraf"
 )
 
 func main() {

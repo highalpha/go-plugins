@@ -9,7 +9,7 @@ import (
 
 	"github.com/micro/go-micro/registry"
 	"github.com/micro/go-os/trace"
-	"github.com/micro/go-plugins/trace/zipkin/thrift/gen-go/zipkincore"
+	"github.com/highalpha/go-plugins/trace/zipkin/thrift/gen-go/zipkincore"
 
 	"errors"
 	"log"

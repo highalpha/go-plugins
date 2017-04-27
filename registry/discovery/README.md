@@ -21,7 +21,7 @@ reason Discovery continues to function.
 ### With Flag
 
 ```go
-import _ "github.com/micro/go-plugins/registry/discovery"
+import _ "github.com/highalpha/go-plugins/registry/discovery"
 ```
 
 ```shell
@@ -33,7 +33,7 @@ go run main.go --registry=os --registry_address=addr1:port,addr2:port,addr3:port
 ```go
 import (
 	"github.com/micro/go-micro"
-	"github.com/micro/go-plugins/registry/discovery"
+	"github.com/highalpha/go-plugins/registry/discovery"
 )
 
 func main() {
