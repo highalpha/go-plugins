@@ -140,7 +140,6 @@ func (c *kregistry) GetService(name string) ([]*registry.Service, error) {
 		tempNS := c.client.GetNamespace()
 		defer c.client.SetNamespace(tempNS)
 		c.client.SetNamespace(parts[0])
-		sls, _ := c.ListServices()
 		name = strings.Join(parts[1:], "")
 	}
 	pods, err := c.client.ListPods(map[string]string{
