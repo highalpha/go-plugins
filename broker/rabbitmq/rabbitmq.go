@@ -8,6 +8,9 @@ import (
 	"golang.org/x/net/context"
 )
 
+var DefaultDurable = true
+var DefaultAutoAck = false
+
 type rbroker struct {
 	conn  *rabbitMQConn
 	addrs []string
@@ -69,20 +72,20 @@ func (r *rbroker) Publish(topic string, msg *broker.Message, opts ...broker.Publ
 
 func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
 	opt := broker.SubscribeOptions{
-		AutoAck: true,
+		AutoAck: DefaultAutoAck,
 	}
 
 	for _, o := range opts {
 		o(&opt)
 	}
 
-	durableQueue := false
+	durableQueue := DefaultDurable
 	if opt.Context != nil {
 		durableQueue, _ = opt.Context.Value(durableQueueKey{}).(bool)
 	}
 
 	ch, sub, err := r.conn.Consume(
-		opt.Queue,
+		"queue_"+topic,
 		topic,
 		opt.AutoAck,
 		durableQueue,
