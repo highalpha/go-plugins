@@ -117,8 +117,6 @@ func (t *grpcTransport) Dial(addr string, opts ...transport.DialOption) (transpo
 		options = append(options, grpc.WithInsecure())
 	}
 
-	options = append(options, grpc.MaxMsgSize(1024*1024*10))
-
 	// dial the server
 	conn, err := grpc.Dial(addr, options...)
 	if err != nil {
