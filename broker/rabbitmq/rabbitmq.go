@@ -37,6 +37,10 @@ func (p *publication) Ack() error {
 	return p.d.Ack(false)
 }
 
+func (p *publication) Nack(dontRequeue bool) error {
+	return p.d.Nack(false, !dontRequeue)
+}
+
 func (p *publication) Topic() string {
 	return p.t
 }
@@ -103,7 +107,13 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 			Header: header,
 			Body:   msg.Body,
 		}
-		handler(&publication{d: msg, m: m, t: msg.RoutingKey})
+		publication := &publication{d: msg, m: m, t: msg.RoutingKey}
+		err := handler(publication)
+		if err == nil {
+			publication.Ack()
+		} else {
+			publication.Nack(false)
+		}
 	}
 
 	go func() {
