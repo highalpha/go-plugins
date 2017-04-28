@@ -7,6 +7,7 @@ package rabbitmq
 import (
 	"errors"
 
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/streadway/amqp"
 )
 
