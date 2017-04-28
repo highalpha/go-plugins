@@ -85,7 +85,7 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 	}
 
 	ch, sub, err := r.conn.Consume(
-		"queue_"+topic,
+		topic,
 		topic,
 		opt.AutoAck,
 		durableQueue,
