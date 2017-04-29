@@ -6,6 +6,8 @@ package rabbitmq
 
 import (
 	"errors"
+	"os"
+	"strconv"
 
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/streadway/amqp"
@@ -29,6 +31,29 @@ func newRabbitChannel(conn *amqp.Connection) (*rabbitMQChannel, error) {
 	if err := rabbitCh.Connect(); err != nil {
 		return nil, err
 	}
+
+	countString, exists := os.LookupEnv("ESB_QUEUE_PREFETCH_COUNT")
+	count := 10
+	if exists {
+		c, err := strconv.Atoi(countString)
+		if err == nil {
+			count = c
+		}
+	}
+	sizeString, exists := os.LookupEnv("ESB_QUEUE_PREFETCH_SIZE")
+	size := 0
+	if exists {
+		s, err := strconv.Atoi(sizeString)
+		if err == nil {
+			size = s
+		}
+	}
+	rabbitCh.channel.Qos(
+		count,
+		size,
+		false,
+	)
+
 	return rabbitCh, nil
 
 }
