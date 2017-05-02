@@ -80,6 +80,8 @@ func (r *rabbitMQConn) Connect(secure bool, config *tls.Config, connected chan b
 			// Spin around and reconnect
 			r.connected = false
 		case <-r.close:
+			r.Channel.Close()
+			r.ExchangeChannel.Close()
 			// Shut down connection
 			if err := r.Connection.Close(); err != nil {
 			}
