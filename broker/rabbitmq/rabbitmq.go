@@ -2,6 +2,8 @@
 package rabbitmq
 
 import (
+	"sync"
+
 	"github.com/micro/go-micro/broker"
 	"github.com/micro/go-micro/cmd"
 	"github.com/streadway/amqp"
@@ -15,6 +17,7 @@ type rbroker struct {
 	conn  *rabbitMQConn
 	addrs []string
 	opts  broker.Options
+	mu    *sync.Mutex
 }
 
 type subscriber struct {
@@ -98,7 +101,7 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 		return nil, err
 	}
 
-	fn := func(msg amqp.Delivery) {
+	fn := func(msg amqp.Delivery, mu *sync.Mutex) {
 		header := make(map[string]string)
 		for k, v := range msg.Headers {
 			header[k], _ = v.(string)
@@ -110,17 +113,20 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 		publication := &publication{d: msg, m: m, t: msg.RoutingKey}
 		err := handler(publication)
 		if err == nil {
+			mu.Lock()
 			publication.Ack()
 		} else {
+			mu.Lock()
 			publication.Nack(false)
 		}
 	}
 
-	go func() {
+	go func(mu *sync.Mutex) {
 		for d := range sub {
-			go fn(d)
+			mu.Unlock()
+			go fn(d, mu)
 		}
-	}()
+	}(r.mu)
 
 	return &subscriber{ch: ch, topic: topic, opts: opt}, nil
 }
@@ -144,6 +150,7 @@ func (r *rbroker) Init(opts ...broker.Option) error {
 	for _, o := range opts {
 		o(&r.opts)
 	}
+	r.mu.Lock()
 	return nil
 }
 
@@ -175,5 +182,6 @@ func NewBroker(opts ...broker.Option) broker.Broker {
 		conn:  newRabbitMQConn(exchange, options.Addrs),
 		addrs: options.Addrs,
 		opts:  options,
+		mu:    &sync.Mutex{},
 	}
 }
