@@ -124,9 +124,6 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 				fmt.Printf("Handling Message: %s", msg.Type)
 				out := &protos.EsbMessage{}
 				err := handle(context.Background(), &msg, out)
-				if err != nil {
-					p.Ack()
-				}
 				return err
 			}
 			fmt.Printf("Discarding Message: %s", msg.Type)
