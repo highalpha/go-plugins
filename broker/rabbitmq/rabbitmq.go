@@ -2,6 +2,10 @@
 package rabbitmq
 
 import (
+	"fmt"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/highalpha/charlotte_utils_go/protos"
 	"github.com/micro/go-micro/broker"
 	"github.com/micro/go-micro/cmd"
 	"github.com/streadway/amqp"
@@ -10,6 +14,7 @@ import (
 
 var DefaultDurable = true
 var DefaultAutoAck = false
+var RouteHandlers = make(map[string]func(context.Context, *protos.EsbMessage, *protos.EsbMessage) error)
 
 type rbroker struct {
 	conn  *rabbitMQConn
@@ -108,7 +113,27 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 			Body:   msg.Body,
 		}
 		publication := &publication{d: msg, m: m, t: msg.RoutingKey}
-		err := handler(publication)
+
+		H := func(p broker.Publication) error {
+			var msg protos.EsbMessage
+			err := proto.Unmarshal(p.Message().Body, &msg)
+			if err != nil {
+				fmt.Println(err)
+			}
+			if handle, ok := RouteHandlers[msg.Type]; ok {
+				fmt.Printf("Handling Message: %s", msg.Type)
+				out := &protos.EsbMessage{}
+				err := handle(context.Background(), &msg, out)
+				if err != nil {
+					p.Ack()
+				}
+				return err
+			}
+			fmt.Printf("Discarding Message: %s", msg.Type)
+			return nil
+		}
+
+		err := H(publication)
 		if err == nil {
 			publication.Ack()
 		} else {
