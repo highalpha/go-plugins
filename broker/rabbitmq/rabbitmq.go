@@ -20,7 +20,7 @@ import (
 var DefaultDurable = true
 var DefaultAutoAck = false
 var RouteHandlers = make(map[string]func(context.Context, *protos.EsbMessage, *protos.EsbMessage) error)
-var messageRetryCount = 5
+var messageRetryCount = int64(5)
 
 type rbroker struct {
 	conn  *rabbitMQConn
@@ -44,10 +44,10 @@ func init() {
 	cmd.DefaultBrokers["rabbitmq"] = NewBroker
 	retryCount, exists := os.LookupEnv("ESB_QUEUE_RETRY_COUNT")
 	if exists {
-		messageRetryCount, err = strconv.Atoi(retryCount)
+		messageRetryCount, err := strconv.ParseInt(retryCount, 10, 64)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			messageRetryCount = 5
+			messageRetryCount = int64(5)
 		}
 	}
 }
