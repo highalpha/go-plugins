@@ -139,6 +139,9 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 				out := &protos.EsbMessage{}
 				err := handle(context.Background(), &msg, out)
 				if err != nil {
+					if msg.Headers == nil {
+						msg.Headers = map[string]string{}
+					}
 					if _, ok := msg.Headers["retries"]; !ok {
 						msg.Headers["retries"] = "0"
 					}
