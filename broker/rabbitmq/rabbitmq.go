@@ -20,6 +20,7 @@ import (
 var DefaultDurable = true
 var DefaultAutoAck = false
 var RouteHandlers = make(map[string]func(context.Context, *protos.EsbMessage, *protos.EsbMessage) error)
+var messageRetryCount = 5
 
 type rbroker struct {
 	conn  *rabbitMQConn
@@ -41,6 +42,14 @@ type publication struct {
 
 func init() {
 	cmd.DefaultBrokers["rabbitmq"] = NewBroker
+	retryCount, exists := os.LookupEnv("ESB_QUEUE_RETRY_COUNT")
+	if exists {
+		messageRetryCount, err = strconv.Atoi(retryCount)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			messageRetryCount = 5
+		}
+	}
 }
 
 func (p *publication) Ack() error {
@@ -139,7 +148,7 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 						return nil, err
 					}
 					retries++
-					if retries > 5 {
+					if retries > messageRetryCount {
 						fmt.Fprintln(os.Stderr, "Error handling message, retry limit exceeded. Discarding message.", msg.Type)
 						return nil, err
 					}
