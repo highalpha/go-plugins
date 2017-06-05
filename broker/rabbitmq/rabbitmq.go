@@ -4,6 +4,11 @@ package rabbitmq
 import (
 	"fmt"
 
+	"os"
+	"strconv"
+
+	"time"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/highalpha/charlotte_utils_go/protos"
 	"github.com/micro/go-micro/broker"
@@ -114,27 +119,54 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 		}
 		publication := &publication{d: msg, m: m, t: msg.RoutingKey}
 
-		H := func(p broker.Publication) error {
+		H := func(p broker.Publication, msg_ amqp.Delivery, h map[string]string) (*publication, error) {
 			var msg protos.EsbMessage
 			err := proto.Unmarshal(p.Message().Body, &msg)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 			}
 			if handle, ok := RouteHandlers[msg.Type]; ok {
-				fmt.Printf("Handling Message: %s", msg.Type)
+				fmt.Println("Handling Message:", msg.Type)
 				out := &protos.EsbMessage{}
 				err := handle(context.Background(), &msg, out)
-				return err
+				if err != nil {
+					if _, ok := msg.Headers["retries"]; !ok {
+						msg.Headers["retries"] = "0"
+					}
+					retries, err := strconv.ParseInt(msg.Headers["retries"], 10, 64)
+					if err != nil {
+						fmt.Fprintln(os.Stderr, "Error parsing retry header in rabbit broker. Discarding message.", msg.Type)
+						return nil, err
+					}
+					retries++
+					if retries > 5 {
+						fmt.Fprintln(os.Stderr, "Error handling message, retry limit exceeded. Discarding message.", msg.Type)
+						return nil, err
+					}
+					time.Sleep((1 * retries) * time.Second)
+					msg.Headers["retries"] = fmt.Sprintf("%d", retries)
+					payload, err := proto.Marshal(msg)
+					if err != nil {
+						fmt.Fprintln(os.Stderr, "Error serializing message. Discarding message", msg.Type)
+						return nil, err
+					}
+					return &publication{d: msg_, m: &broker.Message{Header: h, Body: payload}, t: msg_.RoutingKey}, err
+				}
+				return nil, nil
 			}
-			fmt.Printf("Discarding Message: %s", msg.Type)
-			return nil
+			fmt.Println("Acking Message:", msg.Type)
+			return false, nil
 		}
 
-		err := H(publication)
+		pub, err := H(publication, msg, header)
 		if err == nil {
 			publication.Ack()
 		} else {
-			publication.Nack(false)
+			if pub == nil {
+				publication.Nack(true)
+			} else {
+				pub.Nack(false)
+			}
 		}
 	}
 
