@@ -43,8 +43,9 @@ type publication struct {
 func init() {
 	cmd.DefaultBrokers["rabbitmq"] = NewBroker
 	retryCount, exists := os.LookupEnv("ESB_QUEUE_RETRY_COUNT")
+	var err error
 	if exists {
-		messageRetryCount, err := strconv.ParseInt(retryCount, 10, 64)
+		messageRetryCount, err = strconv.ParseInt(retryCount, 10, 64)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			messageRetryCount = int64(5)
@@ -126,7 +127,7 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 			Header: header,
 			Body:   msg.Body,
 		}
-		publication := &publication{d: msg, m: m, t: msg.RoutingKey}
+		pub := &publication{d: msg, m: m, t: msg.RoutingKey}
 
 		H := func(p broker.Publication, msg_ amqp.Delivery, h map[string]string) (*publication, error) {
 			var msg protos.EsbMessage
@@ -152,9 +153,9 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 						fmt.Fprintln(os.Stderr, "Error handling message, retry limit exceeded. Discarding message.", msg.Type)
 						return nil, err
 					}
-					time.Sleep((1 * retries) * time.Second)
+					time.Sleep(time.Duration(1*retries) * time.Second)
 					msg.Headers["retries"] = fmt.Sprintf("%d", retries)
-					payload, err := proto.Marshal(msg)
+					payload, err := proto.Marshal(&msg)
 					if err != nil {
 						fmt.Fprintln(os.Stderr, "Error serializing message. Discarding message", msg.Type)
 						return nil, err
@@ -164,17 +165,17 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 				return nil, nil
 			}
 			fmt.Println("Acking Message:", msg.Type)
-			return false, nil
+			return nil, nil
 		}
 
-		pub, err := H(publication, msg, header)
+		pub2, err := H(pub, msg, header)
 		if err == nil {
-			publication.Ack()
+			pub.Ack()
 		} else {
 			if pub == nil {
-				publication.Nack(true)
+				pub.Nack(true)
 			} else {
-				pub.Nack(false)
+				pub2.Nack(false)
 			}
 		}
 	}
