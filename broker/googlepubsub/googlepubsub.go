@@ -37,6 +37,15 @@ func init() {
 }
 
 func (s *subscriber) run(hdlr broker.Handler) {
+	if s.options.Context != nil {
+		if max, ok := s.options.Context.Value(maxOutstandingMessagesKey{}).(int); ok {
+			s.sub.ReceiveSettings.MaxOutstandingMessages = max
+		}
+		if max, ok := s.options.Context.Value(maxExtensionKey{}).(time.Duration); ok {
+			s.sub.ReceiveSettings.MaxExtension = max
+		}
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	for {
@@ -90,7 +99,6 @@ func (s *subscriber) Unsubscribe() error {
 		close(s.exit)
 		return s.sub.Delete(context.Background())
 	}
-	return nil
 }
 
 func (p *publication) Ack() error {
@@ -176,7 +184,10 @@ func (b *pubsubBroker) Subscribe(topic string, h broker.Handler, opts ...broker.
 
 	if !exists {
 		tt := b.client.Topic(topic)
-		subb, err := b.client.CreateSubscription(ctx, options.Queue, tt, time.Duration(0), nil)
+		subb, err := b.client.CreateSubscription(ctx, options.Queue, pubsub.SubscriptionConfig{
+			Topic:       tt,
+			AckDeadline: time.Duration(0),
+		})
 		if err != nil {
 			return nil, err
 		}

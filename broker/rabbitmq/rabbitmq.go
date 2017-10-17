@@ -108,9 +108,17 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 		durableQueue, _ = opt.Context.Value(durableQueueKey{}).(bool)
 	}
 
+	var headers map[string]interface{}
+	if opt.Context != nil {
+		if h, ok := opt.Context.Value(headersKey{}).(map[string]interface{}); ok {
+			headers = h
+		}
+	}
+
 	ch, sub, err := r.conn.Consume(
 		topic,
 		topic,
+		headers,
 		opt.AutoAck,
 		durableQueue,
 	)
@@ -215,13 +223,11 @@ func (r *rbroker) Init(opts ...broker.Option) error {
 }
 
 func (r *rbroker) Connect() error {
-	<-r.conn.Init(r.opts.Secure, r.opts.TLSConfig)
-	return nil
+	return r.conn.Connect(r.opts.Secure, r.opts.TLSConfig)
 }
 
 func (r *rbroker) Disconnect() error {
-	r.conn.Close()
-	return nil
+	return r.conn.Close()
 }
 
 func NewBroker(opts ...broker.Option) broker.Broker {
