@@ -52,6 +52,10 @@ func servicePath(s string) string {
 	return path.Join(prefix, strings.Replace(s, "/", "-", -1))
 }
 
+func (e *etcdRegistry) Options() registry.Options {
+	return e.options
+}
+
 func (e *etcdRegistry) Deregister(s *registry.Service) error {
 	if len(s.Nodes) == 0 {
 		return errors.New("Require at least one node")
@@ -178,8 +182,8 @@ func (e *etcdRegistry) ListServices() ([]*registry.Service, error) {
 	return services, nil
 }
 
-func (e *etcdRegistry) Watch() (registry.Watcher, error) {
-	return newEtcdWatcher(e)
+func (e *etcdRegistry) Watch(opts ...registry.WatchOption) (registry.Watcher, error) {
+	return newEtcdWatcher(e, opts...)
 }
 
 func (e *etcdRegistry) String() string {

@@ -11,6 +11,9 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/highalpha/charlotte_utils_go/protos"
+
+	"errors"
+
 	"github.com/micro/go-micro/broker"
 	"github.com/micro/go-micro/cmd"
 	"github.com/streadway/amqp"
@@ -91,6 +94,10 @@ func (r *rbroker) Publish(topic string, msg *broker.Message, opts ...broker.Publ
 		m.Headers[k] = v
 	}
 
+	if r.conn == nil {
+		return errors.New("connection is nil")
+	}
+
 	return r.conn.Publish(r.conn.exchange, topic, m)
 }
 
@@ -113,6 +120,10 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 		if h, ok := opt.Context.Value(headersKey{}).(map[string]interface{}); ok {
 			headers = h
 		}
+	}
+
+	if r.conn == nil {
+		return nil, errors.New("connection is nil")
 	}
 
 	ch, sub, err := r.conn.Consume(
@@ -223,10 +234,16 @@ func (r *rbroker) Init(opts ...broker.Option) error {
 }
 
 func (r *rbroker) Connect() error {
+	if r.conn == nil {
+		r.conn = newRabbitMQConn(r.getExchange(), r.opts.Addrs)
+	}
 	return r.conn.Connect(r.opts.Secure, r.opts.TLSConfig)
 }
 
 func (r *rbroker) Disconnect() error {
+	if r.conn == nil {
+		return errors.New("connection is nil")
+	}
 	return r.conn.Close()
 }
 
@@ -239,14 +256,15 @@ func NewBroker(opts ...broker.Option) broker.Broker {
 		o(&options)
 	}
 
-	var exchange string
-	if e, ok := options.Context.Value(exchangeKey{}).(string); ok {
-		exchange = e
-	}
-
 	return &rbroker{
-		conn:  newRabbitMQConn(exchange, options.Addrs),
 		addrs: options.Addrs,
 		opts:  options,
 	}
+}
+
+func (r *rbroker) getExchange() string {
+	if e, ok := r.opts.Context.Value(exchangeKey{}).(string); ok {
+		return e
+	}
+	return DefaultExchange
 }
