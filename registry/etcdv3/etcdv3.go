@@ -20,8 +20,7 @@ import (
 )
 
 var (
-	prefix      = "/micro-registry"
-	cachePrefix = "/micro-cache"
+	prefix = "/micro-registry"
 )
 
 type etcdv3Registry struct {
@@ -73,24 +72,7 @@ func (e *etcdv3Registry) Deregister(s *registry.Service) error {
 	defer cancel()
 
 	for _, node := range s.Nodes {
-		// cache the value for the watcher
-		resp, err := e.client.Get(ctx, nodePath(s.Name, node.Id))
-		if err != nil {
-			return err
-		}
-
-		for _, ev := range resp.Kvs {
-			lrsp, err := e.client.Grant(ctx, 5)
-			if err != nil {
-				return err
-			}
-			_, err = e.client.Put(ctx, path.Join(cachePrefix, string(ev.Key)), string(ev.Value), clientv3.WithLease(lrsp.ID))
-			if err != nil {
-				return err
-			}
-		}
-
-		_, err = e.client.Delete(ctx, nodePath(s.Name, node.Id))
+		_, err := e.client.Delete(ctx, nodePath(s.Name, node.Id))
 		if err != nil {
 			return err
 		}
@@ -106,8 +88,8 @@ func (e *etcdv3Registry) Register(s *registry.Service, opts ...registry.Register
 	//refreshing lease if existing
 	leaseID, ok := e.leases[s.Name]
 	if ok {
-		if rsp := e.client.KeepAliveOnce(context.TODO(), leaseID); rsp.Err != nil {
-			return rsp.Err
+		if _, err := e.client.KeepAliveOnce(context.TODO(), leaseID); err != nil {
+			return err
 		}
 	}
 

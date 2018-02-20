@@ -4,13 +4,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
 
 	"github.com/highalpha/go-plugins/registry/kubernetes/client/api"
 	"github.com/highalpha/go-plugins/registry/kubernetes/client/watch"
+	log "github.com/micro/go-log"
 )
 
 var (

@@ -4,12 +4,12 @@ package gossip
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/memberlist"
+	"github.com/micro/go-log"
 	"github.com/micro/go-micro/cmd"
 	"github.com/micro/go-micro/registry"
 	"github.com/mitchellh/hashstructure"
@@ -226,11 +226,11 @@ func (d *delegate) MergeRemoteState(buf []byte, join bool) {
 func (m *gossipRegistry) publish(action string, services []*registry.Service) {
 	m.s.RLock()
 	for _, sub := range m.subs {
-		go func() {
+		go func(sub chan *registry.Result) {
 			for _, service := range services {
 				sub <- &registry.Result{Action: action, Service: service}
 			}
-		}()
+		}(sub)
 	}
 	m.s.RUnlock()
 }
@@ -487,6 +487,6 @@ func NewRegistry(opts ...registry.Option) registry.Registry {
 		}
 	}
 
-	log.Printf("Local memberlist node %s:%d\n", m.LocalNode().Addr, m.LocalNode().Port)
+	log.Logf("Local memberlist node %s:%d\n", m.LocalNode().Addr, m.LocalNode().Port)
 	return mr
 }

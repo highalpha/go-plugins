@@ -1,10 +1,10 @@
 package main
 
 import (
-	"log"
 	"net"
 	"net/http"
 
+	"github.com/micro/go-log"
 	"github.com/micro/go-os/config"
 	"github.com/micro/go-os/config/source/file"
 	"github.com/highalpha/go-plugins/micro/router"
