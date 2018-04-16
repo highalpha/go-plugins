@@ -22,7 +22,7 @@ import (
 
 var DefaultDurable = true
 var DefaultAutoAck = false
-var RouteHandlers = make(map[string]func(context.Context, *protos.EsbMessage, *protos.EsbMessage) error)
+var RouteHandlers = make(map[string]func(context.Context, *protos.EsbMessage) error)
 var messageRetryCount = int64(5)
 
 type rbroker struct {
@@ -154,11 +154,11 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 			}
+
 			if handle, ok := RouteHandlers[msg.Type]; ok {
 				fmt.Println("Handling Message:", msg.Type)
-				out := &protos.EsbMessage{}
-				err := handle(context.Background(), &msg, out)
-				if err != nil {
+				hErr := handle(context.Background(), &msg)
+				if hErr != nil {
 					if msg.Headers == nil {
 						msg.Headers = map[string]string{}
 					}
@@ -182,7 +182,7 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 						fmt.Fprintln(os.Stderr, "Error serializing message. Discarding message", msg.Type)
 						return nil, err
 					}
-					return &publication{d: msg_, m: &broker.Message{Header: h, Body: payload}, t: msg_.RoutingKey}, err
+					return &publication{d: msg_, m: &broker.Message{Header: h, Body: payload}, t: msg_.RoutingKey}, hErr
 				}
 				return nil, nil
 			}
@@ -194,10 +194,13 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 		if err == nil {
 			pub.Ack()
 		} else {
-			if pub == nil {
+			if pub2 == nil {
 				pub.Nack(true)
 			} else {
-				pub2.Nack(false)
+				pub.Nack(true)
+				if err := r.Publish(topic, pub2.m); err != nil {
+					fmt.Fprintln(os.Stderr, "Error re-publishing message")
+				}
 			}
 		}
 	}
