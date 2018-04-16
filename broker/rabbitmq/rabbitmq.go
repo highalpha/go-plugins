@@ -156,7 +156,6 @@ func (r *rbroker) Subscribe(topic string, handler broker.Handler, opts ...broker
 			}
 
 			if handle, ok := RouteHandlers[msg.Type]; ok {
-				fmt.Println("Handling Message:", msg.Type)
 				hErr := handle(context.Background(), &msg)
 				if hErr != nil {
 					if msg.Headers == nil {
